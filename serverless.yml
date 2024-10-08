@@ -1,4 +1,4 @@
-service: notes-api
+service: notes-crud-old
 frameworkVersion: "2"
 
 provider:
