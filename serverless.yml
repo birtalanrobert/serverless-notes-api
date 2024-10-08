@@ -8,9 +8,23 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: eu-central-1
 
+#package: # packages each lambda function separately, for this to work requires each lambda function to be in different file
+#  individually: true
+
 plugins:
   - serverless-iam-roles-per-function
   - serverless-plugin-typescript
+  - serverless-esbuild
+  - serverless-prune-plugin
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  esbuild: # for bundling
+    bundle: true
+    minify: true
+  prune: # for removing older versions of the lambda functions
+    automatic: true
+    number: 1
 
 functions:
   authorizer:
@@ -21,6 +35,13 @@ functions:
 
   createNote:
     handler: handler.createNote
+#    package: # can exclude specifically files
+#      patterns:
+#        - '!functions/deleteNote.js'
+#        - '!functions/getAllNote.js'
+#        - '!functions/getNote.js'
+#        - '!functions/updateNote.js'
+
     environment:
       NOTES_TABLE_NAME: { "Ref": "notesTable" }
     iamRoleStatements:
