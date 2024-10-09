@@ -164,4 +164,52 @@ resources:
         Type: String
         Value: Fn::GetAtt cognitoUserPool.Arn
   
+    # Cache policy
+    restAPICachePolicy:
+      Type: AWS::CloudFront::CachePolicy
+      Properties:
+        CachePolicyConfig:
+          DefaultTTL: 300
+          MaxTTL: 31536000
+          MinTTL: 60
+          Name: RestApiCachePolicy
+          ParametersInCacheKeyAndForwardedToOrigin:
+            CookieConfig:
+              CookieBehavior: none
+            EnableAcceptEncodingBrotli: true
+            EnabelAcceptEncodingGzip: true
+            HeadersConfig:
+              HeaderBehavior: whitelist
+              Headers:
+                - Authorization
+              QueryStringsConfig:
+                QueryStringBehavior: none
+
+    # CloudFront distribution
+    cloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultCacheBehavior:
+            TargetOriginId: restApiOrigin
+            CachePolicyId: {Ref: restApiCachePolicy}
+            ViewerProtocolPolicy: https-only
+          CacheBehaviors:
+            - PathPattern: /dev/*
+              TargetOriginId: restApiOrigin
+              CachePolicyId: {Ref: restApiCachePolicy}
+              ViewerProtocolPolicy: https-only
+          Origins:
+            - Id: restApiOrigin
+              DomainName: Fn::Join:
+                - '.'
+                - - {Ref: "ApiGatewayRestApi"}
+                  - 'execute-api'
+                  - ${aws:region}
+                  - "amazonaws.com"
+              CustomOriginConfig:
+                OriginProtocolPolicy: https-only
+          
+              
 
